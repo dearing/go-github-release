@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"log/slog"
 	"mime"
@@ -75,23 +74,25 @@ func run() int {
 	}
 	slog.Info("release created", "id", resp.ID, "url", resp.HTMLURL)
 
-	// get a list of files in the directory
-	files, err := filepath.Glob(filepath.Join(*argDir, "*"))
+	// get a list of assets in the directory
+	assets, err := filepath.Glob(filepath.Join(*argDir, "*"))
 	if err != nil {
-		slog.Error("file glob issue", "err", err)
+		slog.Error("glob issue", "err", err)
 		return ErrorBadPattern
 	}
-	slog.Info("files", "count", len(files))
+	slog.Info("assets", "count", len(assets))
 
 	// upload each file to the release
-	for _, file := range files {
+	for _, file := range assets {
+		uploadStart := time.Now()
 		err := uploadAsset(token, resp.UploadURL, file)
 		if err != nil {
 			slog.Error("upload issue", "err", err)
 			return AssetUploadError
 		}
+		slog.Info("asset uploaded", "file", file, "duration", time.Since(uploadStart))
 	}
-	slog.Info("files uploaded", "count", len(files))
+	slog.Info("assets uploaded", "count", len(assets))
 
 	return NoError
 }
@@ -107,7 +108,7 @@ func version() {
 	}
 }
 
-func prettyPrint(v any) {
-	b, _ := json.MarshalIndent(v, "", "  ")
-	println(string(b))
-}
+// func prettyPrint(v any) {
+// 	b, _ := json.MarshalIndent(v, "", "  ")
+// 	println(string(b))
+// }

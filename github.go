@@ -193,31 +193,32 @@ func (r *CreateReleaseRequest) CreateRelease(owner, repo, token string) (CreateR
 //	ex: uploadAsset("github_pat_abc123", releaseResponse.UploadURL, "file.zip")
 func uploadAsset(token, url, asset string) error {
 
-	// https://uploads.github.com/repos/dearing/go-github-release/releases/201625270/assets{?name,label}
-
+	// open our asset for reading
 	file, err := os.Open(asset)
 	if err != nil {
 		return fmt.Errorf("asset upload issue: %w", err)
 	}
 	defer file.Close()
 
+	// get some information about the file
 	stat, err := file.Stat()
 	if err != nil {
 		return fmt.Errorf("asset upload issue: %w", err)
 	}
 
+	// get the content type of the file; if it's not found, default to application/octet-stream
 	mimeType := mime.TypeByExtension(filepath.Ext(asset))
 	if mimeType == "" {
 		mimeType = "application/octet-stream"
 	}
 
-	slog.Info("upload asset stats", "name", stat.Name(), "content-type", mimeType, "content-length", stat.Size())
+	slog.Info("uploading asset", "name", stat.Name(), "content-type", mimeType, "content-length", stat.Size())
 
 	// replace the query stub with the asset name key-value pair
 	query := fmt.Sprintf("?name=%s", stat.Name()) // TODO: use label?
 	url = strings.Replace(url, "{?name,label}", query, 1)
 
-	slog.Info(">", "url", url)
+	slog.Debug("POST to endpoint", "url", url)
 
 	ctx := context.Background()
 	req, err := http.NewRequestWithContext(ctx, "POST", url, file)
@@ -227,10 +228,15 @@ func uploadAsset(token, url, asset string) error {
 
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Set("Content-Type", mimeType)
-	req.ContentLength = stat.Size()
 
-	//req.Header.Set("Content-Length", fmt.Sprintf("%d", stat.Size()))
+	// from: https://pkg.go.dev/net/http#Request
+	// For client requests, certain headers such as Content-Length
+	// and Connection are automatically written when needed and
+	// values in Header may be ignored. See the documentation
+	// for the Request.Write method.
+	req.ContentLength = stat.Size() // set the content length to the size of the file
 
+	// POST our file to the endpoint and get back a response
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("asset upload issue: %w", err)
@@ -240,21 +246,10 @@ func uploadAsset(token, url, asset string) error {
 	if resp.StatusCode != ReleaseCreated {
 		data, _ := io.ReadAll(resp.Body)
 		slog.Error("upload asset", "status", resp.Status, "data", string(data))
-
 		return fmt.Errorf("asset upload issue status: %s", resp.Status)
 	}
 
-	slog.Info("upload asset", "status", resp.Status)
-
-	info := UploadAssetResponse{}
-
-	// decode the response into our struct
-	err = json.NewDecoder(resp.Body).Decode(&info)
-	if err != nil {
-		return fmt.Errorf("asset upload decode issue: %w", err)
-	}
-
-	prettyPrint(info)
+	slog.Debug("uploaded asset", "name", stat.Name(), "status", resp.Status)
 
 	return nil
 }
