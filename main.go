@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"log/slog"
 	"mime"
@@ -21,6 +22,11 @@ func init() {
 	mime.AddExtensionType(".txt", "text/plain")
 }
 
+func usage() {
+	slog.Info("Usage: [go tool] go-github-release [options] <file>...")
+	flag.PrintDefaults()
+}
+
 func main() {
 
 	flag.Usage = usage
@@ -36,7 +42,8 @@ func main() {
 }
 
 func run() int {
-	// clock the operation
+
+	// clock the whole enchalada
 	start := time.Now()
 	defer func() {
 		slog.Info("operation complete", "duration", time.Since(start))
@@ -49,8 +56,7 @@ func run() int {
 		return TokenNotFound
 	}
 
-	//errChan := make(chan error)
-
+	// create a release request populated with some defaults
 	r := CreateReleaseRequest{
 		TagName:              "v0.0.1",
 		TargetCommitish:      "main",
@@ -61,34 +67,33 @@ func run() int {
 		GenerateReleaseNotes: false,
 	}
 
+	// create a release on GitHub and get the response struct back
 	resp, err := r.CreateRelease("dearing", "go-github-release", token)
 	if err != nil {
 		slog.Error("release issue", "err", err)
-		return UnknownError
+		return ErrorCreateRequest
 	}
 	slog.Info("release created", "id", resp.ID, "url", resp.HTMLURL)
 
-	if *argDir != "" {
-		files, err := filepath.Glob(filepath.Join(*argDir, "*"))
-		if err != nil {
-			slog.Error("file glob issue", "err", err)
-			return UnknownError
-		}
-		slog.Info("files", "count", len(files))
-
-		for _, file := range files {
-			UploadAsset(1, file)
-		}
-
-		slog.Info("files uploaded", "count", len(files))
+	// get a list of files in the directory
+	files, err := filepath.Glob(filepath.Join(*argDir, "*"))
+	if err != nil {
+		slog.Error("file glob issue", "err", err)
+		return ErrorBadPattern
 	}
+	slog.Info("files", "count", len(files))
+
+	// upload each file to the release
+	for _, file := range files {
+		err := uploadAsset(token, resp.UploadURL, file)
+		if err != nil {
+			slog.Error("upload issue", "err", err)
+			return AssetUploadError
+		}
+	}
+	slog.Info("files uploaded", "count", len(files))
 
 	return NoError
-}
-
-func usage() {
-	slog.Info("Usage: [go tool] go-github-release [options] <file>...")
-	flag.PrintDefaults()
 }
 
 func version() {
@@ -102,7 +107,7 @@ func version() {
 	}
 }
 
-// func prettyPrint(v any) {
-// 	b, _ := json.MarshalIndent(v, "", "  ")
-// 	println(string(b))
-// }
+func prettyPrint(v any) {
+	b, _ := json.MarshalIndent(v, "", "  ")
+	println(string(b))
+}

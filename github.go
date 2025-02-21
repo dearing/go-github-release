@@ -5,11 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -22,50 +24,50 @@ const (
 
 // CreateReleaseRequest is the request to create a release on GitHub
 type CreateReleaseRequest struct {
-	TagName              string `json:"tag_name,omitempty"`
-	TargetCommitish      string `json:"target_commitish,omitempty"`
-	Name                 string `json:"name,omitempty"`
-	Body                 string `json:"body,omitempty"`
-	Draft                bool   `json:"draft,omitempty"`
-	Prerelease           bool   `json:"prerelease,omitempty"`
-	GenerateReleaseNotes bool   `json:"generate_release_notes,omitempty"`
+	TagName              string `json:"tag_name,omitzero"`
+	TargetCommitish      string `json:"target_commitish,omitzero"`
+	Name                 string `json:"name,omitzero"`
+	Body                 string `json:"body,omitzero"`
+	Draft                bool   `json:"draft,omitzero"`
+	Prerelease           bool   `json:"prerelease,omitzero"`
+	GenerateReleaseNotes bool   `json:"generate_release_notes,omitzero"`
 }
 
 // CreateReleaseResponse is the response from creating a release on GitHub
 type CreateReleaseResponse struct {
-	URL             string    `json:"url,omitempty"`
-	HTMLURL         string    `json:"html_url,omitempty"`
-	AssetsURL       string    `json:"assets_url,omitempty"`
-	UploadURL       string    `json:"upload_url,omitempty"`
-	TarballURL      string    `json:"tarball_url,omitempty"`
-	ZipballURL      string    `json:"zipball_url,omitempty"`
-	DiscussionURL   string    `json:"discussion_url,omitempty"`
-	ID              int       `json:"id,omitempty"`
-	NodeID          string    `json:"node_id,omitempty"`
-	TagName         string    `json:"tag_name,omitempty"`
-	TargetCommitish string    `json:"target_commitish,omitempty"`
-	Name            string    `json:"name,omitempty"`
-	Body            string    `json:"body,omitempty"`
-	Draft           bool      `json:"draft,omitempty"`
-	Prerelease      bool      `json:"prerelease,omitempty"`
+	URL             string    `json:"url,omitzero"`
+	HTMLURL         string    `json:"html_url,omitzero"`
+	AssetsURL       string    `json:"assets_url,omitzero"`
+	UploadURL       string    `json:"upload_url,omitzero"`
+	TarballURL      string    `json:"tarball_url,omitzero"`
+	ZipballURL      string    `json:"zipball_url,omitzero"`
+	DiscussionURL   string    `json:"discussion_url,omitzero"`
+	ID              int       `json:"id,omitzero"`
+	NodeID          string    `json:"node_id,omitzero"`
+	TagName         string    `json:"tag_name,omitzero"`
+	TargetCommitish string    `json:"target_commitish,omitzero"`
+	Name            string    `json:"name,omitzero"`
+	Body            string    `json:"body,omitzero"`
+	Draft           bool      `json:"draft,omitzero"`
+	Prerelease      bool      `json:"prerelease,omitzero"`
 	CreatedAt       time.Time `json:"created_at"`
 	PublishedAt     time.Time `json:"published_at"`
 	Author          Author    `json:"author"`
-	Assets          []Assets  `json:"assets,omitempty"`
+	Assets          []Assets  `json:"assets,omitzero"`
 }
 
 // UploadAssetResponse is the response from uploading an asset to a release on GitHub
 type UploadAssetResponse struct {
-	URL                string    `json:"url,omitempty"`
-	BrowserDownloadURL string    `json:"browser_download_url,omitempty"`
-	ID                 int       `json:"id,omitempty"`
-	NodeID             string    `json:"node_id,omitempty"`
-	Name               string    `json:"name,omitempty"`
-	Label              string    `json:"label,omitempty"`
-	State              string    `json:"state,omitempty"`
-	ContentType        string    `json:"content_type,omitempty"`
-	Size               int       `json:"size,omitempty"`
-	DownloadCount      int       `json:"download_count,omitempty"`
+	URL                string    `json:"url,omitzero"`
+	BrowserDownloadURL string    `json:"browser_download_url,omitzero"`
+	ID                 int       `json:"id,omitzero"`
+	NodeID             string    `json:"node_id,omitzero"`
+	Name               string    `json:"name,omitzero"`
+	Label              string    `json:"label,omitzero"`
+	State              string    `json:"state,omitzero"`
+	ContentType        string    `json:"content_type,omitzero"`
+	Size               int       `json:"size,omitzero"`
+	DownloadCount      int       `json:"download_count,omitzero"`
 	CreatedAt          time.Time `json:"created_at"`
 	UpdatedAt          time.Time `json:"updated_at"`
 	Uploader           Uploader  `json:"uploader"`
@@ -73,60 +75,60 @@ type UploadAssetResponse struct {
 
 // Author is the author of the release
 type Author struct {
-	Login             string `json:"login,omitempty"`
-	ID                int    `json:"id,omitempty"`
-	NodeID            string `json:"node_id,omitempty"`
-	AvatarURL         string `json:"avatar_url,omitempty"`
-	GravatarID        string `json:"gravatar_id,omitempty"`
-	URL               string `json:"url,omitempty"`
-	HTMLURL           string `json:"html_url,omitempty"`
-	FollowersURL      string `json:"followers_url,omitempty"`
-	FollowingURL      string `json:"following_url,omitempty"`
-	GistsURL          string `json:"gists_url,omitempty"`
-	StarredURL        string `json:"starred_url,omitempty"`
-	SubscriptionsURL  string `json:"subscriptions_url,omitempty"`
-	OrganizationsURL  string `json:"organizations_url,omitempty"`
-	ReposURL          string `json:"repos_url,omitempty"`
-	EventsURL         string `json:"events_url,omitempty"`
-	ReceivedEventsURL string `json:"received_events_url,omitempty"`
-	Type              string `json:"type,omitempty"`
-	SiteAdmin         bool   `json:"site_admin,omitempty"`
+	Login             string `json:"login,omitzero"`
+	ID                int    `json:"id,omitzero"`
+	NodeID            string `json:"node_id,omitzero"`
+	AvatarURL         string `json:"avatar_url,omitzero"`
+	GravatarID        string `json:"gravatar_id,omitzero"`
+	URL               string `json:"url,omitzero"`
+	HTMLURL           string `json:"html_url,omitzero"`
+	FollowersURL      string `json:"followers_url,omitzero"`
+	FollowingURL      string `json:"following_url,omitzero"`
+	GistsURL          string `json:"gists_url,omitzero"`
+	StarredURL        string `json:"starred_url,omitzero"`
+	SubscriptionsURL  string `json:"subscriptions_url,omitzero"`
+	OrganizationsURL  string `json:"organizations_url,omitzero"`
+	ReposURL          string `json:"repos_url,omitzero"`
+	EventsURL         string `json:"events_url,omitzero"`
+	ReceivedEventsURL string `json:"received_events_url,omitzero"`
+	Type              string `json:"type,omitzero"`
+	SiteAdmin         bool   `json:"site_admin,omitzero"`
 }
 
 // Uploader is the uploader of the asset
 type Uploader struct {
-	Login             string `json:"login,omitempty"`
-	ID                int    `json:"id,omitempty"`
-	NodeID            string `json:"node_id,omitempty"`
-	AvatarURL         string `json:"avatar_url,omitempty"`
-	GravatarID        string `json:"gravatar_id,omitempty"`
-	URL               string `json:"url,omitempty"`
-	HTMLURL           string `json:"html_url,omitempty"`
-	FollowersURL      string `json:"followers_url,omitempty"`
-	FollowingURL      string `json:"following_url,omitempty"`
-	GistsURL          string `json:"gists_url,omitempty"`
-	StarredURL        string `json:"starred_url,omitempty"`
-	SubscriptionsURL  string `json:"subscriptions_url,omitempty"`
-	OrganizationsURL  string `json:"organizations_url,omitempty"`
-	ReposURL          string `json:"repos_url,omitempty"`
-	EventsURL         string `json:"events_url,omitempty"`
-	ReceivedEventsURL string `json:"received_events_url,omitempty"`
-	Type              string `json:"type,omitempty"`
-	SiteAdmin         bool   `json:"site_admin,omitempty"`
+	Login             string `json:"login,omitzero"`
+	ID                int    `json:"id,omitzero"`
+	NodeID            string `json:"node_id,omitzero"`
+	AvatarURL         string `json:"avatar_url,omitzero"`
+	GravatarID        string `json:"gravatar_id,omitzero"`
+	URL               string `json:"url,omitzero"`
+	HTMLURL           string `json:"html_url,omitzero"`
+	FollowersURL      string `json:"followers_url,omitzero"`
+	FollowingURL      string `json:"following_url,omitzero"`
+	GistsURL          string `json:"gists_url,omitzero"`
+	StarredURL        string `json:"starred_url,omitzero"`
+	SubscriptionsURL  string `json:"subscriptions_url,omitzero"`
+	OrganizationsURL  string `json:"organizations_url,omitzero"`
+	ReposURL          string `json:"repos_url,omitzero"`
+	EventsURL         string `json:"events_url,omitzero"`
+	ReceivedEventsURL string `json:"received_events_url,omitzero"`
+	Type              string `json:"type,omitzero"`
+	SiteAdmin         bool   `json:"site_admin,omitzero"`
 }
 
 // Assets are the assets of the release
 type Assets struct {
-	URL                string    `json:"url,omitempty"`
-	BrowserDownloadURL string    `json:"browser_download_url,omitempty"`
-	ID                 int       `json:"id,omitempty"`
-	NodeID             string    `json:"node_id,omitempty"`
-	Name               string    `json:"name,omitempty"`
-	Label              string    `json:"label,omitempty"`
-	State              string    `json:"state,omitempty"`
-	ContentType        string    `json:"content_type,omitempty"`
-	Size               int       `json:"size,omitempty"`
-	DownloadCount      int       `json:"download_count,omitempty"`
+	URL                string    `json:"url,omitzero"`
+	BrowserDownloadURL string    `json:"browser_download_url,omitzero"`
+	ID                 int       `json:"id,omitzero"`
+	NodeID             string    `json:"node_id,omitzero"`
+	Name               string    `json:"name,omitzero"`
+	Label              string    `json:"label,omitzero"`
+	State              string    `json:"state,omitzero"`
+	ContentType        string    `json:"content_type,omitzero"`
+	Size               int       `json:"size,omitzero"`
+	DownloadCount      int       `json:"download_count,omitzero"`
 	CreatedAt          time.Time `json:"created_at"`
 	UpdatedAt          time.Time `json:"updated_at"`
 	Uploader           Uploader  `json:"uploader"`
@@ -184,8 +186,14 @@ func (r *CreateReleaseRequest) CreateRelease(owner, repo, token string) (CreateR
 	return info, nil
 }
 
-// UploadAsset uploads an asset to a release on GitHub
-func UploadAsset(id int, asset string) error {
+// uploadAsset uploads an asset to a release on GitHub.
+// The endpoint you call to upload release assets is specific to your release.
+// Use the upload_url returned in the response of the Create a release endpoint to upload a release asset.
+//
+//	ex: uploadAsset("github_pat_abc123", releaseResponse.UploadURL, "file.zip")
+func uploadAsset(token, url, asset string) error {
+
+	// https://uploads.github.com/repos/dearing/go-github-release/releases/201625270/assets{?name,label}
 
 	file, err := os.Open(asset)
 	if err != nil {
@@ -203,6 +211,50 @@ func UploadAsset(id int, asset string) error {
 		mimeType = "application/octet-stream"
 	}
 
-	slog.Info("upload asset", "name", stat.Name(), "content-type", mimeType, "content-length", stat.Size())
+	slog.Info("upload asset stats", "name", stat.Name(), "content-type", mimeType, "content-length", stat.Size())
+
+	// replace the query stub with the asset name key-value pair
+	query := fmt.Sprintf("?name=%s", stat.Name()) // TODO: use label?
+	url = strings.Replace(url, "{?name,label}", query, 1)
+
+	slog.Info(">", "url", url)
+
+	ctx := context.Background()
+	req, err := http.NewRequestWithContext(ctx, "POST", url, file)
+	if err != nil {
+		return fmt.Errorf("asset upload issue: %w", err)
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Set("Content-Type", mimeType)
+	req.ContentLength = stat.Size()
+
+	//req.Header.Set("Content-Length", fmt.Sprintf("%d", stat.Size()))
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("asset upload issue: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != ReleaseCreated {
+		data, _ := io.ReadAll(resp.Body)
+		slog.Error("upload asset", "status", resp.Status, "data", string(data))
+
+		return fmt.Errorf("asset upload issue status: %s", resp.Status)
+	}
+
+	slog.Info("upload asset", "status", resp.Status)
+
+	info := UploadAssetResponse{}
+
+	// decode the response into our struct
+	err = json.NewDecoder(resp.Body).Decode(&info)
+	if err != nil {
+		return fmt.Errorf("asset upload decode issue: %w", err)
+	}
+
+	prettyPrint(info)
+
 	return nil
 }
