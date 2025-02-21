@@ -54,6 +54,23 @@ type CreateReleaseResponse struct {
 	Assets          []Assets  `json:"assets,omitempty"`
 }
 
+// UploadAssetResponse is the response from uploading an asset to a release on GitHub
+type UploadAssetResponse struct {
+	URL                string    `json:"url,omitempty"`
+	BrowserDownloadURL string    `json:"browser_download_url,omitempty"`
+	ID                 int       `json:"id,omitempty"`
+	NodeID             string    `json:"node_id,omitempty"`
+	Name               string    `json:"name,omitempty"`
+	Label              string    `json:"label,omitempty"`
+	State              string    `json:"state,omitempty"`
+	ContentType        string    `json:"content_type,omitempty"`
+	Size               int       `json:"size,omitempty"`
+	DownloadCount      int       `json:"download_count,omitempty"`
+	CreatedAt          time.Time `json:"created_at"`
+	UpdatedAt          time.Time `json:"updated_at"`
+	Uploader           Uploader  `json:"uploader"`
+}
+
 // Author is the author of the release
 type Author struct {
 	Login             string `json:"login,omitempty"`
