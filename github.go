@@ -1,3 +1,7 @@
+// Description: This file contains the functions to create a release and upload an asset to a GitHub repository.
+// MOST of the type definitions here are unused but are returned in the response from the GitHub API so I've
+// included them, maybe it will be useful down the road; they are generated from JSON-to-Go.
+// - Jacob
 package main
 
 import (
@@ -15,11 +19,21 @@ import (
 	"time"
 )
 
+func init() {
+	// feels silly to have to do this
+	mime.AddExtensionType(".exe", "application/octet-stream")
+	mime.AddExtensionType(".zip", "application/zip")
+	mime.AddExtensionType(".tar.gz", "application/gzip")
+	mime.AddExtensionType(".txt", "text/plain")
+}
+
 // Status codes
 const (
 	ReleaseCreated  = 201
 	ReleaseNotFound = 404
 	ReleaseNotValid = 422
+	AssetUploaded   = 201
+	AssetDuplicate  = 422
 )
 
 // CreateReleaseRequest is the request to create a release on GitHub
@@ -221,6 +235,11 @@ func uploadAsset(token, url, asset string) error {
 	slog.Debug("POST to endpoint", "url", url)
 
 	ctx := context.Background()
+
+	// create a new request with the file as the body
+	// TODO: The io.Reader interface is satisfied by *os.File BUT I was getting bad content length errors
+	// until I set the content length manually in the request below because I didn't read the whole binary
+	// file into memory and use a bytes.Buffer.
 	req, err := http.NewRequestWithContext(ctx, "POST", url, file)
 	if err != nil {
 		return fmt.Errorf("asset upload issue: %w", err)
@@ -234,7 +253,7 @@ func uploadAsset(token, url, asset string) error {
 	// and Connection are automatically written when needed and
 	// values in Header may be ignored. See the documentation
 	// for the Request.Write method.
-	req.ContentLength = stat.Size() // set the content length to the size of the file
+	req.ContentLength = stat.Size() // TODO: I feel like I shouldn't have to be doing this manually
 
 	// POST our file to the endpoint and get back a response
 	resp, err := http.DefaultClient.Do(req)
@@ -243,7 +262,8 @@ func uploadAsset(token, url, asset string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != ReleaseCreated {
+	// if we get a non-201 status, the body likely has useful information we should log
+	if resp.StatusCode != AssetUploaded {
 		data, _ := io.ReadAll(resp.Body)
 		slog.Error("upload asset", "status", resp.Status, "data", string(data))
 		return fmt.Errorf("asset upload issue status: %s", resp.Status)

@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"log/slog"
-	"mime"
 	"os"
 	"path/filepath"
 	"runtime/debug"
@@ -11,18 +10,18 @@ import (
 )
 
 var argVersion = flag.Bool("version", false, "print version and exit")
-var argDir = flag.String("dir", "build", "directory to search for files")
+var assetDir = flag.String("asset-dir", "build", "directory to search for assets to upload")
 
-func init() {
-	// feels silly to have to do this
-	mime.AddExtensionType(".exe", "application/octet-stream")
-	mime.AddExtensionType(".zip", "application/zip")
-	mime.AddExtensionType(".tar.gz", "application/gzip")
-	mime.AddExtensionType(".txt", "text/plain")
-}
+var tagName = flag.String("tag-name", "v0.0.1", "release tag name")
+var targetCommitish = flag.String("target-commitish", "main", "target commitish tie the release to")
+var releaseName = flag.String("release-name", "v0.0.1", "release name")
+var releaseBody = flag.String("release-body", "initial release", "release body contents (markdown supported)")
+var releaseDraft = flag.Bool("release-draft", true, "draft")
+var releasePrerelease = flag.Bool("release-prerelease", false, "prerelease")
+var generateReleaseNotes = flag.Bool("generate-release-notes", false, "generate release notes")
 
 func usage() {
-	slog.Info("Usage: [go tool] go-github-release [options] <file>...")
+	slog.Info("Usage: [go tool] go-github-release [options]")
 	flag.PrintDefaults()
 }
 
@@ -31,11 +30,14 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
+	// print some debug information and exit
 	if *argVersion {
 		version()
 		return
 	}
 
+	// we wrap the run inside the main function so we can capture a status
+	// code and cleanly let defer functions within run, uh run
 	status := run()
 	os.Exit(status)
 }
@@ -57,13 +59,13 @@ func run() int {
 
 	// create a release request populated with some defaults
 	r := CreateReleaseRequest{
-		TagName:              "v0.0.1",
-		TargetCommitish:      "main",
-		Name:                 "v0.0.1",
-		Body:                 "initial release",
-		Draft:                true,
-		Prerelease:           false,
-		GenerateReleaseNotes: false,
+		TagName:              *tagName,
+		TargetCommitish:      *targetCommitish,
+		Name:                 *releaseName,
+		Body:                 *releaseBody,
+		Draft:                *releaseDraft,
+		Prerelease:           *releasePrerelease,
+		GenerateReleaseNotes: *generateReleaseNotes,
 	}
 
 	// create a release on GitHub and get the response struct back
@@ -75,7 +77,7 @@ func run() int {
 	slog.Info("release created", "id", resp.ID, "url", resp.HTMLURL)
 
 	// get a list of assets in the directory
-	assets, err := filepath.Glob(filepath.Join(*argDir, "*"))
+	assets, err := filepath.Glob(filepath.Join(*assetDir, "*"))
 	if err != nil {
 		slog.Error("glob issue", "err", err)
 		return ErrorBadPattern
@@ -107,8 +109,3 @@ func version() {
 		}
 	}
 }
-
-// func prettyPrint(v any) {
-// 	b, _ := json.MarshalIndent(v, "", "  ")
-// 	println(string(b))
-// }
