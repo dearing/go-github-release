@@ -41,11 +41,11 @@ commitish (--target-commitish) or existing tag in which case the target
 commitish is ignored. Assets are uploaded to this release based on mime-type
 which is inferred from the file extension.
 
-If you are unsure of what workflow to use, the author recommends creating tag
-ahead of release and using that tag as the --tag-name. This way you can
-seperate the release process from the tag creation process. The automatic tag
-creation feature a GitHub conveinence of a release and not related to git.
-
+If you are unsure of what workflow to use, the author recommends creating a
+tag ahead of release and using that tag as the --tag-name. This way you can
+seperate the release process from the tag creation process and ensure your
+tag is referencing the proper moment in history. The automatic tag creation
+feature is a GitHub conveinence and not related to git.
 
 ex: to draft a new release for an existing tag v1:
 
@@ -70,7 +70,6 @@ Tips:
   - if --release-name is not set, the tag name is used
   - if --target-commitish is not set, main is used
   - a release body supports markdown
-  - use draft to create a release without notifying watchers (default)
   - you can safely edit the release body while the assets are uploading
   - find the latest by name tag: git describe --tags --abbrev=0
   - find the a tag's reference commit: git rev-list -n 1 tags/v0.0.1
