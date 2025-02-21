@@ -71,8 +71,8 @@ Tips:
   - if --target-commitish is not set, main is used
   - a release body supports markdown
   - you can safely edit the release body while the assets are uploading
-  - find the latest by name tag: git describe --tags --abbrev=0
-  - find the a tag's reference commit: git rev-list -n 1 tags/v0.0.1
+  - find the latest tag by name: git describe --tags --abbrev=0
+  - find a tag's reference commit: git rev-list -n 1 tags/v0.0.1
 
 Options:
 
