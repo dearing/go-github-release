@@ -1,0 +1,57 @@
+{
+  "outDir": "build",
+  "srcDir": ".",
+  "md5": false,
+  "sha1": true,
+  "sha256": false,
+  "sha512": false,
+  "zipFile": true,
+  "artifacts": [
+    {
+      "name": "go-github-release-darwin-amd64",
+      "os": "darwin",
+      "arch": "amd64"
+    },
+    {
+      "name": "go-github-release-darwin-arm64",
+      "os": "darwin",
+      "arch": "arm64"
+    },
+    {
+      "name": "go-github-release-linux-arm64",
+      "os": "linux",
+      "arch": "arm64"
+    },
+    {
+      "name": "go-github-release-linux-amd64",
+      "os": "linux",
+      "arch": "amd64"
+    },
+    {
+      "name": "go-github-release-linux-amd64-stripped",
+      "os": "linux",
+      "arch": "amd64",
+      "flags": [
+        "-ldflags=-s -w"
+      ]
+    },
+    {
+      "name": "go-github-release-windows-amd64.exe",
+      "os": "windows",
+      "arch": "amd64"
+    },
+    {
+      "name": "go-github-release-windows-amd64-stripped.exe",
+      "os": "windows",
+      "arch": "amd64",
+      "flags": [
+        "-ldflags=-s -w"
+      ]
+    },
+    {
+      "name": "go-github-release-windows-arm64.exe",
+      "os": "windows",
+      "arch": "arm64"
+    }
+  ]
+}
