@@ -13,6 +13,10 @@ var argVersion = flag.Bool("version", false, "print version and exit")
 var assetDir = flag.String("asset-dir", "build", "directory to search for assets to upload")
 
 var tagName = flag.String("tag-name", "v0.0.1", "release tag name")
+
+var githubOwner = flag.String("github-owner", "", "github owner")
+var githubRepo = flag.String("github-repo", "", "github repo")
+
 var targetCommitish = flag.String("target-commitish", "main", "target commitish tie the release to")
 var releaseName = flag.String("release-name", "v0.0.1", "release name")
 var releaseBody = flag.String("release-body", "initial release", "release body contents (markdown supported)")
@@ -57,6 +61,20 @@ func run() int {
 		return TokenNotFound
 	}
 
+	if *githubOwner == "" {
+		slog.Error("--github-owner is required")
+		return OwnerNotFound
+	}
+
+	if *githubRepo == "" {
+
+		pwd, err := os.Getwd()
+		if err == nil {
+			*githubRepo = filepath.Base(pwd)
+			slog.Info("repo inferred", "repo", *githubRepo)
+		}
+	}
+
 	// create a release request populated with some defaults
 	r := CreateReleaseRequest{
 		TagName:              *tagName,
@@ -69,7 +87,7 @@ func run() int {
 	}
 
 	// create a release on GitHub and get the response struct back
-	resp, err := r.CreateRelease(token, "dearing", "go-github-release")
+	resp, err := r.CreateRelease(token, *githubOwner, *githubRepo)
 	if err != nil {
 		slog.Error("release issue", "err", err)
 		return ErrorCreateRequest
