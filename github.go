@@ -136,8 +136,8 @@ type Assets struct {
 
 // CreateRelease creates a release on GitHub
 //
-//	ex: request.CreateRelease("dearing", "go-github-release", token)
-func (r *CreateReleaseRequest) CreateRelease(owner, repo, token string) (CreateReleaseResponse, error) {
+//	ex: request.CreateRelease(token, "dearing", "go-github-release")
+func (r *CreateReleaseRequest) CreateRelease(token, owner, repo string) (CreateReleaseResponse, error) {
 
 	// create the URL for the request
 	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases", owner, repo)
@@ -190,7 +190,7 @@ func (r *CreateReleaseRequest) CreateRelease(owner, repo, token string) (CreateR
 // The endpoint you call to upload release assets is specific to your release.
 // Use the upload_url returned in the response of the Create a release endpoint to upload a release asset.
 //
-//	ex: uploadAsset("github_pat_abc123", releaseResponse.UploadURL, "file.zip")
+//	ex: uploadAsset(token, releaseResponse.UploadURL, "file.zip")
 func uploadAsset(token, url, asset string) error {
 
 	// open our asset for reading

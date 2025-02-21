@@ -67,7 +67,7 @@ func run() int {
 	}
 
 	// create a release on GitHub and get the response struct back
-	resp, err := r.CreateRelease("dearing", "go-github-release", token)
+	resp, err := r.CreateRelease(token, "dearing", "go-github-release")
 	if err != nil {
 		slog.Error("release issue", "err", err)
 		return ErrorCreateRequest
@@ -83,14 +83,14 @@ func run() int {
 	slog.Info("assets", "count", len(assets))
 
 	// upload each file to the release
-	for _, file := range assets {
+	for _, asset := range assets {
 		uploadStart := time.Now()
-		err := uploadAsset(token, resp.UploadURL, file)
+		err := uploadAsset(token, resp.UploadURL, asset)
 		if err != nil {
 			slog.Error("upload issue", "err", err)
 			return AssetUploadError
 		}
-		slog.Info("asset uploaded", "file", file, "duration", time.Since(uploadStart))
+		slog.Info("asset uploaded", "asset", asset, "duration", time.Since(uploadStart))
 	}
 	slog.Info("assets uploaded", "count", len(assets))
 
