@@ -19,21 +19,14 @@ import (
 	"time"
 )
 
-func init() {
-	// feels silly to have to do this
-	mime.AddExtensionType(".exe", "application/octet-stream")
-	mime.AddExtensionType(".zip", "application/zip")
-	mime.AddExtensionType(".tar.gz", "application/gzip")
-	mime.AddExtensionType(".txt", "text/plain")
-}
-
 // Status codes
 const (
 	ReleaseCreated  = 201
 	ReleaseNotFound = 404
 	ReleaseNotValid = 422
-	AssetUploaded   = 201
-	AssetDuplicate  = 422
+
+	AssetUploaded  = 201
+	AssetDuplicate = 422
 )
 
 // CreateReleaseRequest is the request to create a release on GitHub

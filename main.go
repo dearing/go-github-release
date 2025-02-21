@@ -5,27 +5,72 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"runtime/debug"
 	"time"
 )
 
 var argVersion = flag.Bool("version", false, "print version and exit")
 var assetDir = flag.String("asset-dir", "build", "directory to search for assets to upload")
 
-var tagName = flag.String("tag-name", "v0.0.1", "release tag name")
+var tagName = flag.String("tag-name", "", "release tag to reference or create")
+var targetCommitish = flag.String("target-commitish", "", "when creating a tag, the commit to reference")
 
 var githubOwner = flag.String("github-owner", "", "github owner")
 var githubRepo = flag.String("github-repo", "", "github repo")
 
-var targetCommitish = flag.String("target-commitish", "main", "target commitish tie the release to")
-var releaseName = flag.String("release-name", "v0.0.1", "release name")
-var releaseBody = flag.String("release-body", "initial release", "release body contents (markdown supported)")
-var releaseDraft = flag.Bool("release-draft", true, "draft")
-var releasePrerelease = flag.Bool("release-prerelease", false, "prerelease")
-var generateReleaseNotes = flag.Bool("generate-release-notes", false, "generate release notes")
+var releaseName = flag.String("release-name", "", "release name, defaults to tag name")
+var releaseBody = flag.String("release-body", "no results", "release body contents (markdown supported)")
+var releaseDraft = flag.Bool("release-draft", true, "set draft flag on release")
+var releasePrerelease = flag.Bool("release-prerelease", false, "set prerelease flag on release")
+var generateReleaseNotes = flag.Bool("generate-release-notes", false, "tell GitHub to generate release notes")
 
 func usage() {
-	slog.Info("Usage: [go tool] go-github-release [options]")
+	println(`Usage: [go tool] go-github-release [options]
+Simple GitHub tool to cut a release and upload assets.
+
+NOTE: An env:GITHUB_TOKEN is required to authenticate with GitHub and its 
+recommended to use a personal access token scoped to repository.
+
+GitHub releases are fairly simple, its a ccollection of assets with name and 
+message body that reference a commit, which can be a newly created tag as a 
+commitish (--target-commitish) or existing tag in which case the target 
+commitish is ignored. Assets are uploaded to this release based on mime-type 
+which is inferred from the file extension.
+
+If you are unsure of what workflow to use, the author recommends creating a 
+tag ahead of release and using that tag as the --tag-name. This way you can
+seperate the release process from the tag creation process and ensure your 
+tag is referencing the proper moment in history. The automatic tag creation 
+feature is a GitHub conveinence and not related to git.
+
+ex: to draft a new release for an existing tag v1:
+
+[go tool] go-github-release \
+	--github-owner myorg \
+	--github-repo myrepo \
+	--tag-name v1 \
+	--asset-dir build
+
+ex: to draft a new release and new tag v1 pointing to abc123:
+
+[go tool] go-github-release \
+	--github-owner myorg \
+	--github-repo myrepo \
+	--tag-name v1 \
+	--target-commitish abc123 \
+	--asset-dir dist
+
+Tips:
+  - drafts that create a tag, won't do so until the release is published
+  - if --github-repo is not set, the current directory is used
+  - if --release-name is not set, the tag name is used
+  - if --target-commitish is not set, main is used
+  - a release body supports markdown
+  - you can safely edit the release body while the assets are uploading
+  - find the latest by name tag: git describe --tags --abbrev=0
+  - find the a tag's reference commit: git rev-list -n 1 tags/v0.0.1
+
+Options:
+`)
 	flag.PrintDefaults()
 }
 
@@ -67,12 +112,30 @@ func run() int {
 	}
 
 	if *githubRepo == "" {
-
 		pwd, err := os.Getwd()
 		if err == nil {
 			*githubRepo = filepath.Base(pwd)
-			slog.Info("repo inferred", "repo", *githubRepo)
+			slog.Info("--github-repo not set, using working dir", "repo", *githubRepo)
+		} else {
+			slog.Error("--github-repo is required")
+			return RepoNotFound
 		}
+	}
+
+	if *tagName == "" {
+		slog.Error("--tag-name is required")
+		return TagNameRequired
+	}
+
+	// ensure the asset directory exists
+	if _, err := os.Stat(*assetDir); os.IsNotExist(err) {
+		slog.Error("asset directory not found", "dir", *assetDir)
+		return AssetDirNotFound
+	}
+
+	// set release name to tag name if not set
+	if *releaseName == "" {
+		*releaseName = *tagName
 	}
 
 	// create a release request populated with some defaults
@@ -115,15 +178,4 @@ func run() int {
 	slog.Info("assets uploaded", "count", len(assets))
 
 	return NoError
-}
-
-func version() {
-	// seems like a nice place to sneak in some debug information
-	info, ok := debug.ReadBuildInfo()
-	if ok {
-		slog.Info("build info", "main", info.Main.Path, "version", info.Main.Version)
-		for _, setting := range info.Settings {
-			slog.Info("build info", "key", setting.Key, "value", setting.Value)
-		}
-	}
 }
