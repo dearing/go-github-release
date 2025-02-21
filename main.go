@@ -115,7 +115,7 @@ func run() int {
 		pwd, err := os.Getwd()
 		if err == nil {
 			*githubRepo = filepath.Base(pwd)
-			slog.Info("--github-repo not set, using working dir", "repo", *githubRepo)
+			slog.Warn("--github-repo not set, using working dir", "repo", *githubRepo)
 		} else {
 			slog.Error("--github-repo is required")
 			return RepoNotFound
@@ -136,6 +136,7 @@ func run() int {
 	// set release name to tag name if not set
 	if *releaseName == "" {
 		*releaseName = *tagName
+		slog.Warn("--release-name not set, using tag name", "name", *releaseName)
 	}
 
 	// create a release request populated with some defaults
