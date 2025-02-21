@@ -46,17 +46,17 @@ curl -L \
 
 the idea should be that with an active release, we upload assets and name them.  Workflow could be a set of names passed in the cli AND/OR a directory to target and upload.
 
+
 - support SNI for endpoint
 - set `Release-Id` from CreateRelease
 - set `Content-Length` to asset size
 - set `Content-Type` to a MIME type (https://pkg.go.dev/mime)
-
 - binaries => `application/octet-stream`
 - archives => `application/zip`
 - sumfiles => `text/plain`
-
 - https://www.iana.org/assignments/media-types/media-types.xhtml
 - https://docs.github.com/en/rest/releases/assets?apiVersion=2022-11-28#upload-a-release-asset
+
 
 ### example from docs
 ```
