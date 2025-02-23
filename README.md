@@ -1,5 +1,5 @@
 # go-github-release
-git tool to cut a releaser on github with assets
+git tool to cut a release on github with assets
 
 Tool create a new release at Github for a given owner and repos using a Github Personal Token and the upload assets from a target directory to this release. Finally we give the option to update the message body or publish the release.
 
